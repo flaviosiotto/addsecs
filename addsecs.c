@@ -9,9 +9,13 @@
  *
 *******************************************************/
 
+#define _XOPEN_SOURCE
+
 #include <stdio.h>
-#include <time.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #define MAXBUFSIZE 80
 
@@ -23,23 +27,27 @@ void printUsage(char *progr_name);
 int main(int argc, char **argv)
 {
   time_t now;
-  struct tm now_tm, then_tm;
+  struct tm time_val;
   char buffer[MAXBUFSIZE];
   char *format_s = NULL;
   char *start_s = NULL;
-  int c;
+  char *ret_s = NULL;
+  int c, len_opt;
   long secs;
-  char *ret;
 
   while ( (argc-1)!=optind && ((c = getopt(argc, argv, ":f:s:vh")) != -1) ) {
-	  switch (c) {
-	  case 'f':
-	    format_s = (char *)malloc(strlen(optarg));
-      strncpy(format_s, optarg, strlen(optarg));
+    switch (c) {
+    case 'f':
+      len_opt = strlen(optarg);
+      format_s = (char *)malloc(len_opt+1);
+      strncpy(format_s, optarg, len_opt);
+      format_s[len_opt]='\0';
       break;
-	  case 's':
-	    start_s = (char *)malloc(strlen(optarg));
-      strncpy(start_s, optarg, strlen(optarg));
+    case 's':
+      len_opt = strlen(optarg);
+      start_s = (char *)malloc(len_opt+1);
+      strncpy(start_s, optarg, len_opt);
+      start_s[len_opt]='\0';
       break;
     case 'h':
       printUsage(argv[0]);
@@ -47,11 +55,11 @@ int main(int argc, char **argv)
     case 'v':
       printf("%s: version "VERSION, argv[0]);
       exit(0);
-	  case '?':
-	  default:
+	case '?':
+	default:
       printUsage(argv[0]);
       exit(-1);
-	  }
+	}
   }
 
   if ( ! isinteger(argv[argc-1]) ) {
@@ -61,32 +69,37 @@ int main(int argc, char **argv)
 
   secs = atol(argv[argc-1]);
 
-	memset(&now_tm, 0, sizeof(struct tm));
-	memset(&then_tm, 0, sizeof(struct tm));
-	now_tm.tm_year = 1900;
+  now = time(NULL);
+  time_val = *localtime(&now);
 
   if ( format_s == NULL ) {
-    format_s = (char *) malloc(strlen("%c"));
-    strcpy(format_s, "%c", strlen("%c"));
+    format_s = (char *) malloc(3);
+    strncpy(format_s, "%c", 2);
+    format_s[2]='\0';
   }
 
-  if ( start_s == NULL ) {
-    now = time(NULL);
-    now_tm = *localtime(&now);
-  } else {
-    ret = strptime( start_s, format_s, &now_tm);
-	  if ( ret == NULL || strlen(ret)!=0 ) {
-	    printf("ret %s\n", ret);
+  if ( start_s != NULL ) {
+	ret_s = strptime( start_s, format_s, &time_val);
+    if ( ret_s == NULL || *ret_s != '\0' ) {
+	  printf("strptime error\n");
       printUsage(argv[0]);
-    	exit(-1);
-		}
-	}
-  memcpy( &then_tm, &now_tm, sizeof(struct tm));
-  then_tm.tm_sec += secs;
-  mktime(&then_tm);
+      exit(-1);
+    }
+    free(start_s);
+  }
 
-  strftime( buffer, MAXBUFSIZE, format_s, &then_tm);
-  printf("%s\n",buffer);
+  time_val.tm_sec += secs;
+
+  if ( mktime(&time_val) == -1) {
+    printf("mktime error\n");
+    printUsage(argv[0]);
+    exit(-1);
+  }
+
+  strftime( buffer, MAXBUFSIZE, format_s, &time_val);
+  printf("%s\n", buffer);
+
+  free(format_s);
 
   return 0;
 
