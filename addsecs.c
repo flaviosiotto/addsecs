@@ -1,18 +1,18 @@
 /*******************************************************
 *  Copyright 2012 Flavio Siotto
-* 
+*
 *  addsecs is free software: you can redistribute it and/or modify
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
 *
-*   This program is distributed in the hope that it will be useful,
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU General Public License for more details.
+*  addsecs is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
 *
-*   You should have received a copy of the GNU General Public License
-*    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*  You should have received a copy of the GNU General Public License
+*  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 *  addsecs:
 *  add n seconds from current date or (optionally) from a given date,
@@ -49,8 +49,19 @@ int main(int argc, char **argv)
   char *ret_s = NULL;
   int c, len_opt;
   long secs;
+  
+  if (argc == 2 && *argv[1]=='-' && *(argv[1]+1) == 'h' ) {
+    printUsage(argv[0]);
+    exit(0);
+  }
 
-  while ( (argc-1)!=optind && ((c = getopt(argc, argv, ":f:s:vh")) != -1) ) {
+  if (argc == 2 && *argv[1]=='-' && *(argv[1]+1) == 'v' ) {
+    printf("%s: version "VERSION"\n", argv[0]);
+    exit(0);
+  }
+	
+
+  while ( (argc-1)!=optind && ((c = getopt(argc, argv, "f:s:")) != -1) ) {
     switch (c) {
     case 'f':
       len_opt = strlen(optarg);
@@ -64,12 +75,6 @@ int main(int argc, char **argv)
       strncpy(start_s, optarg, len_opt);
       start_s[len_opt]='\0';
       break;
-    case 'h':
-      printUsage(argv[0]);
-      exit(0);
-    case 'v':
-      printf("%s: version "VERSION, argv[0]);
-      exit(0);
 	case '?':
 	default:
       printUsage(argv[0]);
@@ -78,6 +83,7 @@ int main(int argc, char **argv)
   }
 
   if ( ! isinteger(argv[argc-1]) ) {
+	fprintf(stderr, "invalid argument, %s is not an integer\n", argv[argc-1]);
     printUsage(argv[0]);
   	exit(-1);
   }
@@ -96,7 +102,7 @@ int main(int argc, char **argv)
   if ( start_s != NULL ) {
 	ret_s = strptime( start_s, format_s, &time_val);
     if ( ret_s == NULL || *ret_s != '\0' ) {
-	  printf("strptime error\n");
+	  fprintf(stderr, "strptime error\n");
       printUsage(argv[0]);
       exit(-1);
     }
@@ -106,7 +112,7 @@ int main(int argc, char **argv)
   time_val.tm_sec += secs;
 
   if ( mktime(&time_val) == -1) {
-    printf("mktime error\n");
+    fprintf(stderr, "mktime error\n");
     printUsage(argv[0]);
     exit(-1);
   }
@@ -140,30 +146,42 @@ static int isinteger(const char *s)
 
 
 void printUsage( char *progr_name ) {
+  printf("\nPrint the current date adding seconds passed as argument.\n\n");
   printf ("Usage: %s [-f <format>] [-s <start>] secs\n", progr_name);
-
-/*"%a	Abbreviated weekday name *	Thu"\
-"%A	Full weekday name * 	Thursday"\
-"%b	Abbreviated month name *	Aug"\
-"%B	Full month name *	August"\
-"%c	Date and time representation *	Thu Aug 23 14:55:02 2001"\
-"%d	Day of the month (01-31)	23"\
-"%H	Hour in 24h format (00-23)	14"\
-"%I	Hour in 12h format (01-12)	02"\
-"%j	Day of the year (001-366)	235"\
-"%m	Month as a decimal number (01-12)	08"\
-"%M	Minute (00-59)	55"\
-"%p	AM or PM designation	PM"\
-"%S	Second (00-61)	02"\
-"%U	Week number with the first Sunday as the first day of week one (00-53)	33"\
-"%w	Weekday as a decimal number with Sunday as 0 (0-6)	4"\
-"%W	Week number with the first Monday as the first day of week one (00-53)	34"\
-"%x	Date representation *	08/23/01"\
-"%X	Time representation *	14:55:02"\
-"%y	Year, last two digits (00-99)	01"\
-"%Y	Year	2001"\
-"%Z	Timezone name or abbreviation	CDT"\
-"%%	A % sign	%"\
-*/
+  printf ("       %s -v\n", progr_name);
+  printf ("       %s -h\n", progr_name);
+  printf("Options:\n"\
+		"\t-f <format>\n"\
+		"\t\tSymbol	Description\n"\
+		"\t\t%%a	Abbreviated weekday name -> Thu\n"\
+		"\t\t%%A	Full weekday name -> Thursday\n"\
+		"\t\t%%b	Abbreviated month name -> Aug\n"\
+		"\t\t%%B	Full month name -> August\n"\
+		"\t\t%%c	Date and time representation -> Thu Aug 23 14:55:02 2001\n"\
+		"\t\t%%d	Day of the month (01-31) -> 23\n"\
+		"\t\t%%H	Hour in 24h format (00-23) -> 14\n"\
+		"\t\t%%I	Hour in 12h format (01-12) -> 02\n"\
+		"\t\t%%j	Day of the year (001-366) -> 235\n"\
+		"\t\t%%m	Month as a decimal number (01-12) -> 08\n"\
+		"\t\t%%M	Minute (00-59) -> 55\n"\
+		"\t\t%%p	AM or PM designation -> PM\n"\
+		"\t\t%%S	Second (00-61) -> 02\n"\
+		"\t\t%%U	Week number with the first Sunday\n\t\t as the first day of week one (00-53) -> 33\n"\
+		"\t\t%%w	Weekday as a decimal number\n\t\t with Sunday as 0 (0-6) -> 4\n"\
+		"\t\t%%W	Week number with the first Monday\n\t\t as the first day of week one (00-53) -> 34\n"\
+		"\t\t%%x	Date representation -> 08/23/01\n"\
+		"\t\t%%X	Time representation -> 14:55:02\n"\
+		"\t\t%%y	Year, last two digits (00-99) -> 01\n"\
+		"\t\t%%Y	Year -> 2001\n"\
+		"\t\t%%Z	Timezone name or abbreviation -> CDT\n"\
+		"\t\t%%	A %% sign -> %%\n"\
+		"\t-s <start>\n"\
+		"\t\tInstead of current date, add seconds from the <start> value passed.\n"\
+		"\t\tIf no format specified, assumed %%c.\n"\
+		"\t-h\n"\
+		"\t\tThis help message.\n"\
+		"\t-v\n"\
+		"\t\tPrint the version number.\n"\
+		);
 
 }
