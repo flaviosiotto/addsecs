@@ -83,9 +83,9 @@ int main(int argc, char **argv)
   }
 
   if ( ! isinteger(argv[argc-1]) ) {
-	fprintf(stderr, "invalid argument, %s is not an integer\n", argv[argc-1]);
+    fprintf(stderr, "invalid argument, %s is not an integer\n", argv[argc-1]);
     printUsage(argv[0]);
-  	exit(-1);
+    exit(-1);
   }
 
   secs = atol(argv[argc-1]);
@@ -100,9 +100,9 @@ int main(int argc, char **argv)
   }
 
   if ( start_s != NULL ) {
-	ret_s = strptime( start_s, format_s, &time_val);
+    ret_s = strptime( start_s, format_s, &time_val);
     if ( ret_s == NULL || *ret_s != '\0' ) {
-	  fprintf(stderr, "strptime error\n");
+      fprintf(stderr, "strptime error\n");
       printUsage(argv[0]);
       exit(-1);
     }
@@ -131,17 +131,16 @@ int main(int argc, char **argv)
  */
 static int isinteger(const char *s)
 {
-	/* skip any sign */
-	if ( ((unsigned char)*s) == '-' || ((unsigned char)*s) == '+' )
-		s++;
+  /* skip any sign */
+  if ( ((unsigned char)*s) == '-' || ((unsigned char)*s) == '+' )
+    s++;
 
-	while (*s) {
-		if (!isdigit((unsigned char)*s)) {
-			break;
-		}
-		s++;
-	}
-	return (*s == '\0');
+  while (*s) {
+    if (!isdigit((unsigned char)*s))
+      break;
+    s++;
+  }
+  return (*s == '\0');
 }
 
 
